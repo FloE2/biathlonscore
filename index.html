@@ -196,10 +196,18 @@ tr.flash td{background:#fff3c4}
 /* =====================================================================
    CONFIGURATION FIREBASE
    Collez ici la configuration de votre projet Firebase (voir README).
-   Tant qu'elle vaut null, l'appli tourne en MODE DÉMO : les données
+   Si elle vaut null, l'appli tourne en MODE DÉMO : les données
    restent dans ce navigateur (les onglets d'un même PC se synchronisent).
    ===================================================================== */
-const FIREBASE_CONFIG = null;
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyAozEuo-ZqR-iUjNvheVzxisTk65noTW9Q",
+  authDomain: "biathlonscore.firebaseapp.com",
+  databaseURL: "https://biathlonscore-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "biathlonscore",
+  storageBucket: "biathlonscore.firebasestorage.app",
+  messagingSenderId: "859082745453",
+  appId: "1:859082745453:web:c4dbd0635ce9112d514164"
+};
 
 const ADMINS = ['Florian', 'Emeric', 'Benoit'];
 const POSTES = ['A', 'B'];
