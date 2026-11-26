@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0f1720">
+<title>Biathlon laser – EPS YDM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0f1720; --muted:#4a5868; --line:#dbe2ea; --paper:#f6f8fb; --blue:#2563eb;
+  --d-bg:#0f1720; --d-bar:#16202c; --d-card:#1a2533; --d-chip:#22324a; --d-line:#2f4058; --d-text:#e8eef5; --d-muted:#9fb0c4;
+  --num:'Barlow Condensed', 'Arial Narrow', sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{display:flex;flex-direction:column;font-family:Inter, system-ui, -apple-system, sans-serif;color:var(--ink);background:var(--paper);-webkit-tap-highlight-color:transparent}
+button{font-family:inherit;cursor:pointer;touch-action:manipulation}
+button:disabled{cursor:not-allowed}
+input,select{font-family:inherit;font-size:15px}
+.hidden{display:none!important}
+#app{flex:1;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch}
+.num{font-family:var(--num)}
+.svg-i{width:22px;height:22px;flex-shrink:0}
+
+/* ---------- bandeau démo / erreurs ---------- */
+.banner{padding:8px 16px;font-size:14px;text-align:center;background:#fff3c4;color:#5c4400}
+.banner.err{background:#fde2e1;color:#7f1d1d}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#0f1720;color:#fff;padding:12px 20px;border-radius:12px;font-size:15px;z-index:99;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+
+/* ---------- accueil ---------- */
+.home{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:32px;padding:32px;background:var(--d-bg);color:var(--d-text)}
+.home h1{margin:0;font-size:44px;font-family:var(--num);letter-spacing:.02em}
+.home p{margin:0;color:var(--d-muted)}
+.home-grid{display:grid;grid-template-columns:repeat(2,minmax(0,280px));gap:18px}
+.home-grid a{display:flex;flex-direction:column;gap:6px;padding:26px;border-radius:20px;background:var(--d-card);color:var(--d-text);text-decoration:none;border:2px solid var(--d-line)}
+.home-grid a:hover{border-color:var(--blue)}
+.home-grid b{font-size:24px}
+.home-grid span{color:var(--d-muted);font-size:15px}
+
+/* ---------- JUGE (iPad) ---------- */
+.juge{height:100%;display:flex;flex-direction:column;background:var(--d-bg);color:var(--d-text);--tg:clamp(46px,5.4vw,72px);user-select:none;-webkit-user-select:none}
+.j-top{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:10px 22px;background:var(--d-bar);border-bottom:1px solid #243244}
+.j-top .t1{font-size:20px;font-weight:700}
+.j-top .t2{font-size:14px;color:var(--d-muted)}
+.pill{display:flex;align-items:center;gap:10px;padding:6px 18px;border-radius:999px;background:var(--d-chip);font-size:14px;color:var(--d-muted)}
+.pill b{font-family:var(--num);font-size:30px;color:var(--d-text);line-height:1}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:#22c55e;margin-right:6px}
+.dot.off{background:#ef4444}
+.lanes{flex:1;display:flex;flex-direction:column;gap:10px;padding:12px 16px;min-height:0}
+.lane{flex:1;min-height:0;display:grid;grid-template-columns:34px minmax(150px,1fr) auto auto minmax(250px,1.25fr);grid-template-areas:"num who tg miss right";align-items:center;gap:14px;padding:8px 14px;border-radius:18px;background:var(--d-card)}
+.lane .n{grid-area:num;font-family:var(--num);font-size:34px;font-weight:700;color:#6f8399;text-align:center}
+.who{grid-area:who;display:flex;flex-direction:column;gap:6px;min-width:0}
+.who-row{display:flex;height:62px;border-radius:14px;background:var(--d-chip);overflow:hidden}
+.who-row .name{flex:1;min-width:0;border:0;background:transparent;color:var(--d-text);font-size:20px;font-weight:700;text-align:left;padding:0 14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.who-row .x{width:54px;border:0;border-left:1px solid var(--d-line);background:transparent;display:flex;align-items:center;justify-content:center}
+.who .serie{font-size:14px;color:var(--d-muted);padding-left:4px}
+.who .add{height:62px;border-radius:14px;border:2px dashed #4a6280;background:transparent;color:#b9c8da;font-size:19px;font-weight:600}
+.tgs{grid-area:tg;display:flex;gap:10px}
+.tg{flex-shrink:0;width:var(--tg);height:var(--tg);padding:0;border-radius:50%;background:#05080c;border:4px solid #3d5068;box-shadow:inset 0 0 0 calc(var(--tg)*.17) #0f1720;display:flex;align-items:center;justify-content:center;transition:transform .08s}
+.tg:active:not(:disabled){transform:scale(.92)}
+.tg.hit{background:#f4f7fa;border:5px solid #22c55e;box-shadow:none}
+.tg svg{width:48%;height:48%}
+.lane.empty .tgs,.lane.empty .miss{opacity:.3}
+.miss{grid-area:miss;display:flex;align-items:center;gap:8px}
+.miss .m-minus{width:44px;height:62px;border-radius:12px;border:2px solid var(--d-line);background:transparent;color:var(--d-text);font-size:26px;font-weight:700}
+.miss .m-plus{height:62px;min-width:118px;padding:0 12px;border-radius:12px;border:0;background:#3a2330;color:#ffd5d5;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1}
+.miss .m-plus b{font-family:var(--num);font-size:30px}
+.miss .m-plus span{font-size:13px;font-weight:600}
+.right{grid-area:right;height:100%;min-height:62px;display:flex;align-items:center;gap:10px}
+.right .fin{flex:1;height:62px;border:0;border-radius:14px;background:#16a34a;color:#fff;font-size:20px;font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.15}
+.right .fin small{font-size:13px;font-weight:500;opacity:.85}
+.right .fin:disabled{background:#26344a;color:#6f8399}
+.score{flex:1;height:100%;max-height:120px;min-height:62px;border-radius:14px;display:flex;align-items:center;justify-content:center;gap:8px}
+.score b{font-family:var(--num);font-size:clamp(56px,9.5vh,104px);font-weight:800;line-height:1}
+.score i{font-family:var(--num);font-style:normal;font-size:clamp(26px,3.2vh,40px);font-weight:700}
+.score small{font-size:13px;font-weight:600;max-width:90px;line-height:1.2;margin-left:4px}
+.after{display:flex;flex-direction:column;gap:6px;width:130px}
+.after button{height:44px;border-radius:12px;font-size:15px;font-weight:600}
+.after .corr{border:2px solid #4a6280;background:transparent;color:var(--d-text)}
+.after .nxt{border:0;background:var(--blue);color:#fff}
+@media (max-width:1000px){
+  .lane{grid-template-columns:34px minmax(0,1fr) auto;grid-template-areas:"num who right" "num tg miss";row-gap:8px}
+  .right{min-width:230px}
+  .juge{--tg:clamp(46px,8.6vw,78px)}
+}
+/* sélecteur de tireur */
+.overlay{position:fixed;inset:0;background:rgba(5,8,12,.8);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
+.sheet{width:min(1040px,100%);max-height:100%;padding:24px;border-radius:24px;background:var(--d-card);color:var(--d-text);display:flex;flex-direction:column;gap:18px}
+.sheet-h{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:22px;font-weight:700}
+.sheet-h span{font-weight:500;color:var(--d-muted)}
+.btn-ghost{height:48px;padding:0 20px;border-radius:12px;border:2px solid #4a6280;background:transparent;color:var(--d-text);font-size:16px;font-weight:600}
+.pupils{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;overflow-y:auto}
+.pupils button{min-height:58px;padding:6px 10px;border:0;border-radius:12px;background:#2b3d55;color:var(--d-text);font-size:17px;font-weight:600;line-height:1.15}
+.pupils button small{display:block;font-size:12px;font-weight:500;color:var(--d-muted)}
+.pupils button:disabled{background:#141d29;color:#55677d}
+
+/* ---------- PROJECTION ---------- */
+.proj{height:100%;display:flex;flex-direction:column;background:#0a0f16;color:var(--d-text);overflow:hidden}
+.p-top{display:flex;justify-content:space-between;align-items:center;padding:1.2vh 2vw;background:var(--d-bar)}
+.p-top h1{margin:0;font-family:var(--num);font-size:4.2vh;letter-spacing:.02em}
+.p-top .meta{font-size:2.2vh;color:var(--d-muted);display:flex;gap:2vw;align-items:center}
+.p-top button{background:transparent;border:1px solid var(--d-line);color:var(--d-muted);border-radius:8px;padding:6px 12px;font-size:14px}
+.p-cols{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:1.5vw;padding:1.5vh 1.5vw;min-height:0}
+.p-col{display:flex;flex-direction:column;gap:1vh;min-height:0}
+.p-col h2{margin:0;font-family:var(--num);font-size:3.4vh;color:var(--d-muted);font-weight:700}
+.p-lane{flex:1;min-height:0;display:grid;grid-template-columns:3vw minmax(0,1fr) auto minmax(13vw,auto);align-items:center;gap:1.2vw;padding:0 1.2vw;border-radius:1.4vh;background:var(--d-card)}
+.p-lane .n{font-family:var(--num);font-size:4.4vh;color:#6f8399;font-weight:700;text-align:center}
+.p-lane .nm{font-size:3.4vh;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.p-lane .nm small{display:block;white-space:normal;font-size:2vh;color:var(--d-muted);font-weight:500}
+.p-dots{display:flex;gap:.6vw}
+.p-dot{width:4.6vh;height:4.6vh;border-radius:50%;background:#05080c;border:.5vh solid #3d5068}
+.p-dot.hit{background:#f4f7fa;border-color:#22c55e}
+.p-res{height:82%;border-radius:1.2vh;display:flex;align-items:center;justify-content:center;gap:.6vw;padding:0 1vw}
+.p-res b{font-family:var(--num);font-size:9vh;font-weight:800;line-height:1}
+.p-res i{font-family:var(--num);font-style:normal;font-size:4vh;font-weight:700}
+.p-res.live{background:#141d29;color:var(--d-muted);font-size:2.4vh;flex-direction:column;gap:0}
+.p-res.live b{font-size:5vh;color:var(--d-text)}
+.p-lane.empty{opacity:.35}
+
+/* ---------- ADMIN (PC) ---------- */
+.admin{min-height:100%;background:var(--paper)}
+.a-top{position:sticky;top:0;z-index:10;display:flex;flex-wrap:wrap;align-items:center;gap:14px 24px;padding:12px 28px;background:#fff;border-bottom:1px solid var(--line)}
+.a-top h1{margin:0;font-size:22px}
+.a-top .who{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{height:40px;padding:0 16px;border-radius:10px;border:1px solid #c9d3de;background:#fff;color:var(--ink);font-size:15px;font-weight:600}
+.chip.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.tabs{display:flex;gap:4px;margin-left:auto}
+.tab{height:40px;padding:0 16px;border:0;border-radius:10px;background:transparent;color:var(--muted);font-size:15px;font-weight:600}
+.tab.on{background:#e6eefc;color:#1d4ed8}
+.a-main{max-width:1400px;margin:0 auto;padding:24px 28px 60px;display:flex;flex-direction:column;gap:20px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.card.hl{border:2px solid var(--blue)}
+.card h3{margin:0;font-size:13px;font-weight:700;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+.card.hl h3{color:#1d4ed8}
+.stepper{display:flex;align-items:center;gap:14px}
+.stepper button{width:44px;height:44px;border-radius:10px;border:1px solid #c9d3de;background:var(--paper);font-size:24px;font-weight:700;color:var(--ink)}
+.stepper b{font-family:var(--num);font-size:44px;line-height:1;min-width:40px;text-align:center}
+.stepper span{font-size:14px;color:var(--muted)}
+.two{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:20px;align-items:start}
+@media (max-width:1100px){.two{grid-template-columns:1fr}}
+.postes{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.mini{display:grid;grid-template-columns:22px minmax(0,1fr) auto auto;gap:6px 10px;align-items:center;font-size:14px}
+.mini .sq{display:flex;gap:3px}
+.mini .sq i{width:12px;height:12px;border-radius:50%;background:#1f2937;display:block}
+.mini .sq i.hit{background:#22c55e}
+.tag{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:26px;padding:0 6px;border-radius:6px;font-size:13px;font-weight:700}
+.btn{height:40px;padding:0 16px;border-radius:10px;border:1px solid #c9d3de;background:#fff;color:var(--ink);font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:8px;text-decoration:none}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn.danger{color:#b91c1c;border-color:#f3c3c3}
+.btn.sm{height:32px;padding:0 10px;font-size:13px}
+.feed{display:flex;flex-direction:column;gap:10px}
+.feed-it{display:flex;align-items:center;gap:12px}
+.feed-it .big{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:var(--num);font-size:26px;font-weight:800}
+.feed-it div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.feed-it b{font-size:15px}
+.feed-it span{font-size:13px;color:var(--muted)}
+.empty-msg{font-size:14px;color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-size:12px;letter-spacing:.04em;color:var(--muted);background:var(--paper);padding:10px 12px;font-weight:700;text-transform:uppercase}
+td{padding:7px 12px;border-top:1px solid #eef2f6;vertical-align:middle}
+tr.click{cursor:pointer}
+tr.click:hover td{background:#f3f7ff}
+tr.flash td{background:#fff3c4}
+.last{display:flex;gap:3px;flex-wrap:wrap}
+.last .tag{min-width:24px;height:24px}
+.table-box{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:#fff}
+.fiche{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+@media (max-width:1000px){.fiche{grid-template-columns:1fr}}
+.kpis{display:flex;flex-wrap:wrap;gap:24px}
+.kpis div{display:flex;flex-direction:column}
+.kpis b{font-family:var(--num);font-size:36px;line-height:1}
+.kpis span{font-size:13px;color:var(--muted)}
+.form-row{display:flex;flex-wrap:wrap;gap:10px;align-items:end}
+.form-row label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);font-weight:600}
+.form-row input,.form-row select,td input,td select{height:38px;padding:0 10px;border:1px solid #c9d3de;border-radius:8px;background:#fff;color:var(--ink)}
+.cls-h{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.cls-h h3{font-size:16px;color:var(--ink);letter-spacing:0;text-transform:none}
+.note{font-size:13px;color:var(--muted);margin:0}
+</style>
+</head>
+<body>
+<div id="banner"></div>
+<div id="app"></div>
+<div id="toast" class="hidden"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script>
+/* =====================================================================
+   CONFIGURATION FIREBASE
+   Collez ici la configuration de votre projet Firebase (voir README).
+   Tant qu'elle vaut null, l'appli tourne en MODE DÉMO : les données
+   restent dans ce navigateur (les onglets d'un même PC se synchronisent).
+   ===================================================================== */
+const FIREBASE_CONFIG = null;
+
+const ADMINS = ['Florian', 'Emeric', 'Benoit'];
+const POSTES = ['A', 'B'];
+const BG = ['#c62828', '#d9480f', '#f08c2e', '#f2c230', '#4f9a2a', '#178a45'];
+const FG = ['#ffffff', '#ffffff', '#1b1b1b', '#1b1b1b', '#ffffff', '#ffffff'];
+const DEFAULT_CONFIG = { admin: 'Florian', classe: '', nbSeries: 3, tirsMax: 5 };
+
+/* ---------------------------------------------------------------------
+   Couche de données : Firebase Realtime Database ou stockage local (démo)
+   --------------------------------------------------------------------- */
+const LocalDB = (() => {
+  const KEY = 'biathlon-laser-demo';
+  const subs = [];
+  const tree = () => { try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) { return {}; } };
+  const parts = p => p.split('/').filter(Boolean);
+  const get = (t, p) => parts(p).reduce((o, k) => (o == null ? null : (o[k] ?? null)), t);
+  function put(t, p, v) {
+    const ks = parts(p); let o = t;
+    for (let i = 0; i < ks.length - 1; i++) { if (typeof o[ks[i]] !== 'object' || o[ks[i]] === null) o[ks[i]] = {}; o = o[ks[i]]; }
+    const last = ks[ks.length - 1];
+    if (v === null || v === undefined) delete o[last]; else o[last] = JSON.parse(JSON.stringify(v));
+  }
+  const emit = () => { const t = tree(); subs.forEach(s => s.cb(get(t, s.path))); };
+  function write(fn) { const t = tree(); fn(t); localStorage.setItem(KEY, JSON.stringify(t)); emit(); return Promise.resolve(); }
+  window.addEventListener('storage', e => { if (e.key === KEY) emit(); });
+  return {
+    demo: true,
+    watch(path, cb) { const s = { path, cb }; subs.push(s); cb(get(tree(), path)); return () => subs.splice(subs.indexOf(s), 1); },
+    set(path, v) { return write(t => put(t, path, v)); },
+    update(path, obj) { return write(t => Object.keys(obj).forEach(k => put(t, path + '/' + k, obj[k]))); },
+    push(path, v) { const k = Date.now().toString(36) + Math.random().toString(36).slice(2, 7); write(t => put(t, path + '/' + k, v)); return k; },
+    remove(path) { return write(t => put(t, path, null)); },
+    onConnected(cb) { cb(true); }
+  };
+})();
+
+function makeFireDB() {
+  const db = firebase.database();
+  const fail = e => toast('Erreur d’enregistrement : ' + (e && e.message ? e.message : e));
+  return {
+    demo: false,
+    watch(path, cb) { const r = db.ref(path); const h = s => cb(s.val()); r.on('value', h, fail); return () => r.off('value', h); },
+    set(path, v) { return db.ref(path).set(v).catch(fail); },
+    update(path, obj) { return db.ref(path).update(obj).catch(fail); },
+    push(path, v) { const r = db.ref(path).push(); r.set(v).catch(fail); return r.key; },
+    remove(path) { return db.ref(path).remove().catch(fail); },
+    onConnected(cb) { db.ref('.info/connected').on('value', s => cb(!!s.val())); }
+  };
+}
+
+/* ---------------------------------------------------------------------
+   État
+   --------------------------------------------------------------------- */
+let DB = null;
+const S = { config: { ...DEFAULT_CONFIG }, eleves: {}, postes: {}, tirs: {}, connected: false, loaded: {} };
+const U = { tab: 'seance', histClasse: null, fiche: null, editId: null, picker: null, flash: {}, importClasse: '' };
+let route = { view: 'home' };
+
+const $app = document.getElementById('app');
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const pad = n => String(n).padStart(2, '0');
+const today = () => { const d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
+const hhmm = ts => { const d = new Date(ts); return d.getHours() + 'h' + pad(d.getMinutes()); };
+const frDate = iso => { if (!iso) return ''; const [y, m, d] = iso.split('-'); return d + '/' + m + '/' + y.slice(2); };
+const penText = v => { const p = 5 - v; return p === 0 ? 'aucune pénalité' : p + (p > 1 ? ' tours de pénalité' : ' tour de pénalité'); };
+const icoX = '<svg class="svg-i" viewBox="0 0 24 24" fill="none" stroke="#ff8a80" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+const icoCheck = '<svg viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+
+function toast(msg) {
+  const t = document.getElementById('toast'); t.textContent = msg; t.classList.remove('hidden');
+  clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.add('hidden'), 3000);
+}
+function cfg() { return { ...DEFAULT_CONFIG, ...(S.config || {}) }; }
+
+/* élèves : nom d'affichage « Prénom N. » (nom complet si deux homonymes dans la classe) */
+let NAMES = {};
+function computeNames() {
+  NAMES = {};
+  const byKey = {};
+  Object.entries(S.eleves || {}).forEach(([id, e]) => {
+    const k = (e.classe || '') + '|' + (e.prenom || '').toLowerCase() + '|' + (e.nom || '').charAt(0).toUpperCase();
+    (byKey[k] = byKey[k] || []).push(id);
+  });
+  Object.entries(S.eleves || {}).forEach(([id, e]) => {
+    const k = (e.classe || '') + '|' + (e.prenom || '').toLowerCase() + '|' + (e.nom || '').charAt(0).toUpperCase();
+    NAMES[id] = byKey[k].length > 1 ? `${e.prenom} ${e.nom}` : `${e.prenom} ${(e.nom || '').charAt(0).toUpperCase()}.`;
+  });
+}
+const nameOf = (id, fallback) => NAMES[id] || fallback || '?';
+const classes = () => [...new Set(Object.values(S.eleves || {}).map(e => e.classe).filter(Boolean))].sort();
+const elevesOf = cl => Object.entries(S.eleves || {}).filter(([, e]) => e.classe === cl)
+  .map(([id, e]) => ({ id, ...e })).sort((a, b) => (a.nom || '').localeCompare(b.nom || '', 'fr') || (a.prenom || '').localeCompare(b.prenom || '', 'fr'));
+
+/* couloirs */
+function normLane(l) {
+  if (!l || !l.eleveId) return { eleveId: null };
+  return { eleveId: l.eleveId, nom: l.nom || '', serie: l.serie || 1, hits: (l.hits || '00000').padEnd(5, '0').slice(0, 5), manques: l.manques || 0, done: !!l.done, tirId: l.tirId || null };
+}
+function lanesOf(p) { const raw = (S.postes && S.postes[p] && S.postes[p].lanes) || {}; return [0, 1, 2, 3, 4].map(i => normLane(raw[i])); }
+const hitsCount = l => (l.hits || '').split('').filter(c => c === '1').length;
+
+/* ---------------------------------------------------------------------
+   Démarrage
+   --------------------------------------------------------------------- */
+function parseRoute() {
+  const h = location.hash.replace('#', '');
+  if (/^juge-[AB]$/.test(h)) return { view: 'juge', poste: h.slice(5) };
+  if (h === 'admin') return { view: 'admin' };
+  if (h === 'projection') return { view: 'projection' };
+  return { view: 'home' };
+}
+window.addEventListener('hashchange', () => { route = parseRoute(); U.picker = null; render(); if (route.view === 'juge') keepAwake(); });
+
+function banner(html, err) { const b = document.getElementById('banner'); b.className = html ? 'banner' + (err ? ' err' : '') : ''; b.innerHTML = html || ''; }
+
+function start() {
+  route = parseRoute();
+  if (FIREBASE_CONFIG && window.firebase) {
+    try {
+      firebase.initializeApp(FIREBASE_CONFIG);
+      firebase.auth().signInAnonymously().catch(e => banner('Connexion Firebase impossible : activez « Anonyme » dans Authentication (voir README). ' + esc(e.message), true));
+      firebase.auth().onAuthStateChanged(u => { if (u && !DB) { DB = makeFireDB(); subscribe(); } });
+    } catch (e) { banner('Configuration Firebase invalide : ' + esc(e.message), true); DB = LocalDB; subscribe(); }
+  } else {
+    DB = LocalDB;
+    banner('Mode démo : les données restent dans ce navigateur. Collez la configuration Firebase dans index.html pour relier iPad et PC.');
+    subscribe();
+  }
+  render();
+}
+
+function subscribe() {
+  DB.onConnected(c => { S.connected = c; render(); });
+  DB.watch('config', v => { S.config = v || {}; S.loaded.config = true; render(); });
+  DB.watch('eleves', v => { S.eleves = v || {}; computeNames(); S.loaded.eleves = true; render(); });
+  DB.watch('postes', v => { S.postes = v || {}; render(); });
+  DB.watch('tirs', v => {
+    const old = S.tirs || {}; S.tirs = v || {};
+    if (S.loaded.tirs) Object.entries(S.tirs).forEach(([k, t]) => { if (!old[k] || old[k].touches !== t.touches || old[k].eleveId !== t.eleveId) flash(t.eleveId); });
+    S.loaded.tirs = true; render();
+  });
+}
+function flash(id) { U.flash[id] = Date.now(); setTimeout(() => { delete U.flash[id]; render(); }, 2600); }
+
+/* rendu groupé, sans écraser une saisie en cours */
+let renderQueued = false, renderPending = false;
+function render() {
+  if (renderQueued) return; renderQueued = true;
+  requestAnimationFrame(() => {
+    renderQueued = false;
+    const a = document.activeElement;
+    if (a && $app.contains(a) && /INPUT|SELECT|TEXTAREA/.test(a.tagName) && a.type !== 'file') { renderPending = true; return; }
+    renderPending = false;
+    if (route.view === 'juge') $app.innerHTML = viewJuge();
+    else if (route.view === 'admin') $app.innerHTML = viewAdmin();
+    else if (route.view === 'projection') $app.innerHTML = viewProjection();
+    else $app.innerHTML = viewHome();
+  });
+}
+document.addEventListener('focusout', () => setTimeout(() => { if (renderPending) render(); }, 0));
+
+/* ---------------------------------------------------------------------
+   ACCUEIL
+   --------------------------------------------------------------------- */
+function viewHome() {
+  return `<div class="home">
+    <h1>BIATHLON LASER · EPS</h1>
+    <p>Choisissez l’écran de cet appareil</p>
+    <div class="home-grid">
+      <a href="#juge-A"><b>iPad A</b><span>Juge du pas de tir A · 5 couloirs</span></a>
+      <a href="#juge-B"><b>iPad B</b><span>Juge du pas de tir B · 5 couloirs</span></a>
+      <a href="#admin"><b>PC admin</b><span>Réglages de séance, historique, élèves</span></a>
+      <a href="#projection"><b>Projection</b><span>Scores des 2 iPad en direct, écran géant</span></a>
+    </div>
+  </div>`;
+}
+
+/* ---------------------------------------------------------------------
+   JUGE (iPad)
+   --------------------------------------------------------------------- */
+function viewJuge() {
+  const c = cfg(), p = route.poste, lanes = lanesOf(p);
+  let h = `<div class="juge">
+    <div class="j-top">
+      <div><div class="t1">Pas de tir ${p} · Classe ${esc(c.classe || '—')}</div><div class="t2">Séance gérée par ${esc(c.admin)}</div></div>
+      <div class="pill">SÉRIES <b>${c.nbSeries}</b> · TIRS AUTORISÉS <b>${c.tirsMax}</b></div>
+      <div class="t2"><span class="dot ${S.connected ? '' : 'off'}"></span>${DB && DB.demo ? 'Mode démo' : (S.connected ? 'Connecté au PC' : 'Hors ligne – envoi dès le retour du réseau')}</div>
+    </div>
+    <div class="lanes">`;
+  lanes.forEach((l, i) => { h += laneRow(l, i, c); });
+  h += `</div></div>`;
+  if (U.picker !== null) h += pickerView(c);
+  return h;
+}
+
+function laneRow(l, i, c) {
+  const has = !!l.eleveId, hits = has ? hitsCount(l) : 0, shots = hits + (l.manques || 0);
+  let who;
+  if (has) {
+    who = `<div class="who-row"><button class="name" data-act="pick" data-i="${i}" aria-label="Changer de tireur">${esc(nameOf(l.eleveId, l.nom))}</button>
+      <button class="x" data-act="clear" data-i="${i}" aria-label="Retirer ce tireur">${icoX}</button></div>
+      <div class="serie">Série ${l.serie} / ${c.nbSeries}</div>`;
+  } else {
+    who = `<button class="add" data-act="pick" data-i="${i}">+ Qui tire ?</button>`;
+  }
+  const off = !has || l.done;
+  let tgs = '';
+  for (let j = 0; j < 5; j++) {
+    const hit = has && l.hits[j] === '1';
+    tgs += `<button class="tg ${hit ? 'hit' : ''}" data-act="tap" data-i="${i}" data-j="${j}" aria-label="Couloir ${i + 1}, cible ${j + 1}" ${off ? 'disabled' : ''}>${hit ? icoCheck : ''}</button>`;
+  }
+  const miss = `<button class="m-minus" data-act="miss" data-d="-1" data-i="${i}" aria-label="Retirer un tir manqué" ${off ? 'disabled' : ''}>−</button>
+    <button class="m-plus" data-act="miss" data-d="1" data-i="${i}" ${off ? 'disabled' : ''}><b>${has ? l.manques : 0}</b><span>+ Manqué</span></button>`;
+  let right;
+  if (has && l.done) {
+    right = `<div class="score" style="background:${BG[hits]};color:${FG[hits]}"><b>${hits}</b><i>/5</i><small>${penText(hits)}</small></div>
+      <div class="after"><button class="corr" data-act="correct" data-i="${i}">Corriger</button>
+      <button class="nxt" data-act="next" data-i="${i}">${l.serie < c.nbSeries ? 'Série suivante' : 'Libérer'}</button></div>`;
+  } else {
+    right = `<button class="fin" data-act="finish" data-i="${i}" ${has ? '' : 'disabled'}>Tir terminé<small>${has ? `tir ${shots} / ${c.tirsMax} · ${hits} touchée${hits > 1 ? 's' : ''}` : 'aucun tireur'}</small></button>`;
+  }
+  return `<div class="lane ${has ? '' : 'empty'}"><div class="n">${i + 1}</div><div class="who">${who}</div><div class="tgs">${tgs}</div><div class="miss">${miss}</div><div class="right">${right}</div></div>`;
+}
+
+function pickerView(c) {
+  const used = {};
+  POSTES.forEach(p => lanesOf(p).forEach(l => { if (l.eleveId) used[l.eleveId] = true; }));
+  const list = elevesOf(c.classe).sort((a, b) => (a.prenom || '').localeCompare(b.prenom || '', 'fr'));
+  const items = list.length ? list.map(e => `<button data-act="choose" data-id="${e.id}" ${used[e.id] ? 'disabled' : ''}>${esc(e.prenom)}<small>${esc(e.nom)}</small></button>`).join('')
+    : `<p class="empty-msg" style="color:#9fb0c4">Aucun élève : le PC admin doit choisir la classe de la séance.</p>`;
+  return `<div class="overlay" data-act="closePicker"><div class="sheet" data-stop="1">
+    <div class="sheet-h"><div>Qui tire au couloir ${U.picker + 1} ? <span>· ${esc(c.classe || '')}</span></div><button class="btn-ghost" data-act="closePicker">Annuler</button></div>
+    <div class="pupils">${items}</div></div></div>`;
+}
+
+/* actions juge */
+const lanePath = i => `postes/${route.poste}/lanes/${i}`;
+function saveLane(i, l) { DB.set(lanePath(i), l && l.eleveId ? l : null); }
+function tirRecord(l, i) {
+  const c = cfg(), e = S.eleves[l.eleveId] || {}, hits = hitsCount(l);
+  return { eleveId: l.eleveId, nom: e.nom || l.nom || '', prenom: e.prenom || '', classe: e.classe || c.classe || '',
+    poste: route.poste, couloir: i + 1, serie: l.serie, nbSeries: c.nbSeries, touches: hits, manques: l.manques || 0,
+    tirsMax: c.tirsMax, admin: c.admin || '' };
+}
+function finishLane(i, l) {
+  l.done = true;
+  const rec = tirRecord(l, i);
+  if (l.tirId) DB.update('tirs/' + l.tirId, rec);
+  else { rec.ts = Date.now(); rec.date = today(); l.tirId = DB.push('tirs', rec); }
+  saveLane(i, l);
+}
+function autoCheck(i, l) {
+  const hits = hitsCount(l);
+  if (hits === 5 || hits + (l.manques || 0) >= cfg().tirsMax) finishLane(i, l); else saveLane(i, l);
+}
+const JUGE = {
+  pick(d) { U.picker = +d.i; render(); },
+  closePicker() { U.picker = null; render(); },
+  choose(d) {
+    const i = U.picker, l = lanesOf(route.poste)[i], e = S.eleves[d.id];
+    U.picker = null;
+    if (!e) return render();
+    if (!l.eleveId) saveLane(i, { eleveId: d.id, nom: nameOf(d.id), serie: 1, hits: '00000', manques: 0, done: false, tirId: null });
+    else {
+      l.eleveId = d.id; l.nom = nameOf(d.id);
+      if (l.done && l.tirId) DB.update('tirs/' + l.tirId, { eleveId: d.id, nom: e.nom, prenom: e.prenom, classe: e.classe });
+      saveLane(i, l);
+    }
+    render();
+  },
+  clear(d) { saveLane(+d.i, null); },
+  tap(d) {
+    const i = +d.i, j = +d.j, l = lanesOf(route.poste)[i];
+    if (!l.eleveId || l.done) return;
+    const arr = l.hits.split('');
+    if (arr[j] === '0' && hitsCount(l) + l.manques >= cfg().tirsMax) return toast('Plus de tirs disponibles : corrigez un tir manqué ou appuyez sur « Tir terminé ».');
+    arr[j] = arr[j] === '1' ? '0' : '1'; l.hits = arr.join('');
+    if (arr[j] === '1') autoCheck(i, l); else saveLane(i, l);
+  },
+  miss(d) {
+    const i = +d.i, l = lanesOf(route.poste)[i], step = +d.d;
+    if (!l.eleveId || l.done) return;
+    if (step > 0 && hitsCount(l) + l.manques >= cfg().tirsMax) return;
+    l.manques = Math.max(0, l.manques + step);
+    if (step > 0) autoCheck(i, l); else saveLane(i, l);
+  },
+  finish(d) { const i = +d.i, l = lanesOf(route.poste)[i]; if (l.eleveId) finishLane(i, l); },
+  correct(d) { const i = +d.i, l = lanesOf(route.poste)[i]; l.done = false; saveLane(i, l); },
+  next(d) {
+    const i = +d.i, l = lanesOf(route.poste)[i];
+    if (l.serie < cfg().nbSeries) saveLane(i, { ...l, serie: l.serie + 1, hits: '00000', manques: 0, done: false, tirId: null });
+    else saveLane(i, null);
+  }
+};
+
+/* maintien de l'écran allumé sur iPad */
+let wakeLock = null;
+async function keepAwake() {
+  try { if ('wakeLock' in navigator && route.view === 'juge' && !wakeLock) { wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', () => { wakeLock = null; }); } } catch (e) { /* ignoré */ }
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') keepAwake(); });
+
+/* ---------------------------------------------------------------------
+   PROJECTION
+   --------------------------------------------------------------------- */
+function viewProjection() {
+  const c = cfg(), now = new Date();
+  let h = `<div class="proj"><div class="p-top"><h1>BIATHLON LASER · ${esc(c.classe || '')}</h1>
+    <div class="meta"><span>${c.nbSeries} série${c.nbSeries > 1 ? 's' : ''} · ${c.tirsMax} tirs pour 5 cibles</span><span>${now.getHours()}h${pad(now.getMinutes())}</span>
+    <button data-act="fullscreen">Plein écran</button></div></div><div class="p-cols">`;
+  POSTES.forEach(p => {
+    h += `<div class="p-col"><h2>PAS DE TIR ${p}</h2>`;
+    lanesOf(p).forEach((l, i) => {
+      if (!l.eleveId) { h += `<div class="p-lane empty"><div class="n">${i + 1}</div><div class="nm">—</div><div></div><div></div></div>`; return; }
+      const hits = hitsCount(l);
+      let dots = ''; for (let j = 0; j < 5; j++) dots += `<span class="p-dot ${l.hits[j] === '1' ? 'hit' : ''}"></span>`;
+      const res = l.done
+        ? `<div class="p-res" style="background:${BG[hits]};color:${FG[hits]}"><b>${hits}</b><i>/5</i></div>`
+        : `<div class="p-res live"><b>${hits + l.manques}/${c.tirsMax}</b>tirs</div>`;
+      h += `<div class="p-lane"><div class="n">${i + 1}</div><div class="nm">${esc(nameOf(l.eleveId, l.nom))}<small>Série ${l.serie}/${c.nbSeries}${l.manques ? ' · ' + l.manques + ' manqué' + (l.manques > 1 ? 's' : '') : ''}</small></div><div class="p-dots">${dots}</div>${res}</div>`;
+    });
+    h += `</div>`;
+  });
+  return h + `</div></div>`;
+}
+setInterval(() => { if (route.view === 'projection') render(); }, 30000);
+
+/* ---------------------------------------------------------------------
+   ADMIN (PC)
+   --------------------------------------------------------------------- */
+function statsOf(list) {
+  const n = list.length, t = list.reduce((a, r) => a + (r.touches || 0), 0), m = list.reduce((a, r) => a + (r.manques || 0), 0);
+  return { n, t, m, avg: n ? t / n : null, pct: n ? Math.round(t / (5 * n) * 100) : null, prec: t + m ? Math.round(t / (t + m) * 100) : null };
+}
+const fmt1 = v => v == null ? '—' : v.toFixed(1).replace('.', ',');
+const tagScore = v => `<span class="tag" style="background:${BG[v]};color:${FG[v]}">${v}</span>`;
+const tirsList = () => Object.entries(S.tirs || {}).map(([id, t]) => ({ id, ...t })).sort((a, b) => (a.ts || 0) - (b.ts || 0));
+
+function viewAdmin() {
+  const c = cfg();
+  const tabs = [['seance', 'Séance'], ['histo', 'Historique'], ['eleves', 'Élèves'], ['export', 'Export']]
+    .map(([k, t]) => `<button class="tab ${U.tab === k ? 'on' : ''}" data-act="tab" data-k="${k}">${t}</button>`).join('');
+  let h = `<div class="admin"><div class="a-top"><h1>Biathlon laser · Admin</h1>
+    <div class="who">Qui gère la séance ?<div class="chips">${ADMINS.map(a => `<button class="chip ${c.admin === a ? 'on' : ''}" data-act="setAdmin" data-v="${a}">${a}</button>`).join('')}</div></div>
+    <div class="who"><span class="dot ${S.connected ? '' : 'off'}"></span>${DB && DB.demo ? 'Mode démo' : (S.connected ? 'En ligne' : 'Hors ligne')}</div>
+    <a class="btn" href="#projection" target="_blank" rel="noopener">Ouvrir la projection</a>
+    <div class="tabs">${tabs}</div></div><div class="a-main">`;
+  if (U.tab === 'seance') h += adminSeance(c);
+  else if (U.tab === 'histo') h += adminHisto(c);
+  else if (U.tab === 'eleves') h += adminEleves(c);
+  else h += adminExport(c);
+  return h + `</div></div>`;
+}
+
+function adminSeance(c) {
+  const cls = classes();
+  let h = `<div class="grid3">
+    <div class="card"><h3>Classe de la séance</h3>${cls.length ? `<div class="chips">${cls.map(k => `<button class="chip ${c.classe === k ? 'on' : ''}" data-act="setClasse" data-v="${esc(k)}">${esc(k)}</button>`).join('')}</div>` : `<p class="note">Aucune classe : importez vos listes dans l’onglet <b>Élèves</b>.</p>`}</div>
+    <div class="card hl"><h3>Séries de 5 tirs · en direct sur les iPad</h3><div class="stepper">
+      <button data-act="step" data-k="nbSeries" data-d="-1" aria-label="Une série de moins">−</button><b>${c.nbSeries}</b>
+      <button data-act="step" data-k="nbSeries" data-d="1" aria-label="Une série de plus">+</button><span>série(s) à enchaîner par tireur</span></div></div>
+    <div class="card hl"><h3>Tirs autorisés pour blanchir les 5 cibles</h3><div class="stepper">
+      <button data-act="step" data-k="tirsMax" data-d="-1" aria-label="Un tir de moins">−</button><b>${c.tirsMax}</b>
+      <button data-act="step" data-k="tirsMax" data-d="1" aria-label="Un tir de plus">+</button><span>tirs (5 = pas de balle de réserve)</span></div></div>
+  </div><div class="two"><div class="postes">`;
+  POSTES.forEach(p => {
+    const lanes = lanesOf(p);
+    h += `<div class="card"><div class="cls-h"><h3>iPad ${p} · pas de tir ${p}</h3><button class="btn sm danger" data-act="clearPoste" data-p="${p}">Vider le poste</button></div><div class="mini">`;
+    lanes.forEach((l, i) => {
+      if (!l.eleveId) { h += `<span>${i + 1}</span><span class="empty-msg">libre</span><span></span><span></span>`; return; }
+      const hits = hitsCount(l);
+      let sq = ''; for (let j = 0; j < 5; j++) sq += `<i class="${l.hits[j] === '1' ? 'hit' : ''}"></i>`;
+      h += `<span>${i + 1}</span><span><b>${esc(nameOf(l.eleveId, l.nom))}</b> <span class="empty-msg">S${l.serie}/${c.nbSeries}</span></span><span class="sq">${sq}</span>
+        <span>${l.done ? tagScore(hits) : `<span class="empty-msg">${hits + l.manques}/${c.tirsMax}</span>`}</span>`;
+    });
+    h += `</div></div>`;
+  });
+  const recent = tirsList().filter(t => t.date === today()).reverse().slice(0, 12);
+  h += `</div><div class="card"><h3>Derniers scores reçus</h3><div class="feed">${recent.length ? recent.map(t => `<div class="feed-it"><span class="big" style="background:${BG[t.touches]};color:${FG[t.touches]}">${t.touches}</span>
+    <div><b>${esc(nameOf(t.eleveId, t.prenom + ' ' + t.nom))} <span>(${esc(t.classe)})</span></b><span>Série ${t.serie}/${t.nbSeries} · ${t.manques} manqué${t.manques > 1 ? 's' : ''} · iPad ${t.poste} · ${hhmm(t.ts)}</span></div></div>`).join('')
+    : `<p class="empty-msg">Rien aujourd’hui pour l’instant.</p>`}</div></div></div>`;
+  return h;
+}
+
+function adminHisto(c) {
+  const cls = classes(); const cl = U.histClasse || c.classe || cls[0] || '';
+  const all = tirsList();
+  let h = `<div class="cls-h"><div class="chips">${cls.map(k => `<button class="chip ${cl === k ? 'on' : ''}" data-act="histClasse" data-v="${esc(k)}">${esc(k)}</button>`).join('')}</div>
+    <span class="empty-msg">Cliquez sur un élève pour voir sa progression</span></div>`;
+  if (U.fiche && S.eleves[U.fiche]) h += ficheView(U.fiche, all);
+  const rows = elevesOf(cl).map(e => {
+    const list = all.filter(t => t.eleveId === e.id), s = statsOf(list);
+    return `<tr class="click ${U.flash[e.id] ? 'flash' : ''}" data-act="fiche" data-id="${e.id}"><td><b>${esc(e.nom)}</b> ${esc(e.prenom)}</td><td>${s.n || '—'}</td><td>${fmt1(s.avg)}</td><td>${s.pct == null ? '—' : s.pct + ' %'}</td><td>${s.n ? s.m : '—'}</td><td>${s.prec == null ? '—' : s.prec + ' %'}</td>
+      <td><div class="last">${list.slice(-15).map(t => tagScore(t.touches)).join('')}</div></td></tr>`;
+  }).join('');
+  h += `<div class="table-box"><table><thead><tr><th>Élève</th><th>Séries</th><th>Moy. /5</th><th>Cibles blanchies</th><th>Manqués</th><th>Précision</th><th>Dernières séries</th></tr></thead>
+    <tbody>${rows || `<tr><td colspan="7" class="empty-msg">Aucun élève dans cette classe.</td></tr>`}</tbody></table></div>
+    <p class="note">Cibles blanchies = touchées ÷ (5 × séries). Précision = touchées ÷ tirs effectués (touchés + manqués).</p>`;
+  return h;
+}
+
+function ficheView(id, all) {
+  const e = S.eleves[id], list = all.filter(t => t.eleveId === id), s = statsOf(list);
+  const byDay = {};
+  list.forEach(t => { (byDay[t.date] = byDay[t.date] || []).push(t); });
+  const days = Object.keys(byDay).sort();
+  const W = 520, H = 180, bw = Math.min(60, (W - 40) / Math.max(days.length, 1) - 12);
+  let svg = `<svg viewBox="0 0 ${W} ${H + 30}" width="100%" role="img" aria-label="Moyenne sur 5 par séance">`;
+  [0, 1, 2, 3, 4, 5].forEach(v => { const y = 10 + H - v * H / 5; svg += `<line x1="28" x2="${W}" y1="${y}" y2="${y}" stroke="#eef2f6"/><text x="0" y="${y + 4}" font-size="11" fill="#4a5868">${v}</text>`; });
+  days.forEach((d, k) => {
+    const a = statsOf(byDay[d]).avg, x = 40 + k * ((W - 40) / days.length), bh = a * H / 5, col = BG[Math.round(a)];
+    svg += `<rect x="${x}" y="${10 + H - bh}" width="${bw}" height="${bh}" rx="4" fill="${col}"/><text x="${x + bw / 2}" y="${H + 26}" font-size="11" text-anchor="middle" fill="#4a5868">${frDate(d)}</text>
+      <text x="${x + bw / 2}" y="${6 + H - bh}" font-size="11" text-anchor="middle" fill="#0f1720" font-weight="700">${fmt1(a)}</text>`;
+  });
+  svg += `</svg>`;
+  const rows = list.slice().reverse().map(t => `<tr><td>${frDate(t.date)} ${hhmm(t.ts)}</td><td>${t.serie}/${t.nbSeries}</td><td>${tagScore(t.touches)}</td><td>${t.manques}</td><td>${t.poste}${t.couloir}</td><td>${esc(t.admin)}</td>
+    <td><button class="btn sm danger" data-act="delTir" data-id="${t.id}">Supprimer</button></td></tr>`).join('');
+  return `<div class="card"><div class="cls-h"><h3>${esc(e.prenom)} ${esc(e.nom)} · ${esc(e.classe)}</h3><button class="btn sm" data-act="fiche" data-id="">Fermer</button></div>
+    <div class="kpis"><div><b>${s.n}</b><span>séries</span></div><div><b>${fmt1(s.avg)}</b><span>moyenne /5</span></div><div><b>${s.pct == null ? '—' : s.pct + '%'}</b><span>cibles blanchies</span></div><div><b>${s.prec == null ? '—' : s.prec + '%'}</b><span>précision</span></div><div><b>${s.m}</b><span>tirs manqués</span></div></div>
+    <div class="fiche"><div>${days.length ? svg : '<p class="empty-msg">Pas encore de tir.</p>'}</div>
+    ${list.length ? `<div class="table-box" style="max-height:260px;overflow-y:auto"><table><thead><tr><th>Date</th><th>Série</th><th>Score</th><th>Manqués</th><th>Couloir</th><th>Admin</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>` : ''}</div></div>`;
+}
+
+function adminEleves(c) {
+  const cls = classes();
+  let h = `<div class="grid3">
+    <div class="card"><h3>Importer une classe (Excel ou CSV)</h3>
+      <p class="note">Fichier exporté de Pronote / ENT avec les colonnes NOM et Prénom. Les élèves déjà présents ne sont pas dupliqués.</p>
+      <div class="form-row"><label>Classe<input id="impClasse" placeholder="ex. 3A" value="${esc(U.importClasse)}" style="width:90px"></label>
+      <label>Fichier<input id="impFile" type="file" accept=".xlsx,.xls,.csv"></label><button class="btn primary" data-act="import">Importer</button></div></div>
+    <div class="card"><h3>Ajouter un élève</h3><div class="form-row">
+      <label>Prénom<input id="addPrenom" style="width:130px"></label><label>Nom<input id="addNom" style="width:150px"></label>
+      <label>Classe<input id="addClasse" list="dlClasses" value="${esc(c.classe || cls[0] || '')}" style="width:80px"></label><button class="btn primary" data-act="addEleve">Ajouter</button></div>
+      <datalist id="dlClasses">${cls.map(k => `<option value="${esc(k)}">`).join('')}</datalist></div>
+  </div>`;
+  if (!cls.length) h += `<p class="empty-msg">Aucun élève pour l’instant.</p>`;
+  cls.forEach(cl => {
+    const list = elevesOf(cl);
+    h += `<div class="card"><div class="cls-h"><h3>${esc(cl)} · ${list.length} élèves</h3><button class="btn sm danger" data-act="delClasse" data-v="${esc(cl)}">Supprimer la classe</button></div>
+      <div class="table-box"><table><thead><tr><th>Nom</th><th>Prénom</th><th>Classe</th><th></th></tr></thead><tbody>`;
+    list.forEach(e => {
+      if (U.editId === e.id) {
+        h += `<tr><td><input id="edNom" value="${esc(e.nom)}"></td><td><input id="edPrenom" value="${esc(e.prenom)}"></td><td><input id="edClasse" value="${esc(e.classe)}" style="width:80px"></td>
+          <td><button class="btn sm primary" data-act="saveEleve" data-id="${e.id}">Enregistrer</button> <button class="btn sm" data-act="editEleve" data-id="">Annuler</button></td></tr>`;
+      } else {
+        h += `<tr><td><b>${esc(e.nom)}</b></td><td>${esc(e.prenom)}</td><td>${esc(e.classe)}</td>
+          <td><button class="btn sm" data-act="editEleve" data-id="${e.id}">Modifier</button> <button class="btn sm danger" data-act="delEleve" data-id="${e.id}">Supprimer</button></td></tr>`;
+      }
+    });
+    h += `</tbody></table></div></div>`;
+  });
+  return h;
+}
+
+function adminExport(c) {
+  const cls = classes();
+  return `<div class="grid3">
+    <div class="card"><h3>Tous les tirs</h3><p class="note">Une ligne par série de 5 tirs : date, élève, score, manqués, couloir… S’ouvre dans Excel.</p>
+      <div class="chips"><button class="btn primary" data-act="csvTirs" data-v="">Toutes les classes</button>${cls.map(k => `<button class="btn" data-act="csvTirs" data-v="${esc(k)}">${esc(k)}</button>`).join('')}</div></div>
+    <div class="card"><h3>Bilan par élève</h3><p class="note">Une ligne par élève : séries, moyenne /5, % cibles blanchies, précision, moyenne de la 1re et de la dernière séance.</p>
+      <div class="chips"><button class="btn primary" data-act="csvBilan" data-v="">Toutes les classes</button>${cls.map(k => `<button class="btn" data-act="csvBilan" data-v="${esc(k)}">${esc(k)}</button>`).join('')}</div></div>
+    <div class="card"><h3>Liens des écrans</h3><p class="note">À ouvrir sur chaque appareil (ou depuis la page d’accueil).</p>
+      <div class="chips"><a class="btn" href="#juge-A">iPad A</a><a class="btn" href="#juge-B">iPad B</a><a class="btn" href="#projection" target="_blank" rel="noopener">Projection</a><a class="btn" href="#">Accueil</a></div></div>
+  </div>`;
+}
+
+/* CSV */
+function download(name, rows) {
+  const csv = '﻿' + rows.map(r => r.map(v => { const s = String(v ?? ''); return /[;"\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }).join(';')).join('\r\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' })); a.download = name; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+const num = v => v == null ? '' : String(Math.round(v * 100) / 100).replace('.', ',');
+
+/* import Excel (SheetJS chargé à la demande) */
+function loadXLSX() {
+  if (window.XLSX) return Promise.resolve();
+  return new Promise((ok, ko) => { const s = document.createElement('script'); s.src = 'https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js'; s.onload = ok; s.onerror = () => ko(new Error('Impossible de charger le lecteur Excel')); document.head.appendChild(s); });
+}
+const norm = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toUpperCase();
+async function importFile(file, classe) {
+  await loadXLSX();
+  const wb = XLSX.read(await file.arrayBuffer(), { type: 'array' });
+  const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, raw: false });
+  const hi = rows.findIndex(r => r.some(c => norm(c) === 'NOM') && r.some(c => norm(c) === 'PRENOM'));
+  if (hi < 0) throw new Error('Colonnes « NOM » et « Prénom » introuvables');
+  const cn = rows[hi].findIndex(c => norm(c) === 'NOM'), cp = rows[hi].findIndex(c => norm(c) === 'PRENOM');
+  const exist = new Set(Object.values(S.eleves).map(e => e.classe + '|' + norm(e.nom) + '|' + norm(e.prenom)));
+  let n = 0;
+  rows.slice(hi + 1).forEach(r => {
+    const nom = String(r[cn] || '').trim(), prenom = String(r[cp] || '').trim();
+    if (!nom || !prenom) return;
+    const k = classe + '|' + norm(nom) + '|' + norm(prenom);
+    if (exist.has(k)) return; exist.add(k);
+    DB.push('eleves', { nom: nom.toUpperCase(), prenom, classe }); n++;
+  });
+  return n;
+}
+
+const ADMIN = {
+  tab(d) { U.tab = d.k; U.fiche = null; render(); },
+  setAdmin(d) { DB.update('config', { admin: d.v });},
+  setClasse(d) {
+    const c = cfg(); if (c.classe === d.v) return;
+    const busy = POSTES.some(p => lanesOf(p).some(l => l.eleveId));
+    if (busy && !confirm('Des tireurs sont encore sur les iPad. Vider les deux postes et passer en ' + d.v + ' ?')) return;
+    if (busy) DB.remove('postes');
+    DB.update('config', { classe: d.v }); U.histClasse = null;
+  },
+  step(d) {
+    const c = cfg(), lim = d.k === 'nbSeries' ? [1, 10] : [5, 10];
+    DB.update('config', { [d.k]: Math.min(lim[1], Math.max(lim[0], c[d.k] + (+d.d))) });
+  },
+  clearPoste(d) { if (confirm('Retirer tous les tireurs de l’iPad ' + d.p + ' ? (les scores déjà envoyés sont conservés)')) DB.remove('postes/' + d.p); },
+  histClasse(d) { U.histClasse = d.v; U.fiche = null; render(); },
+  fiche(d) { U.fiche = d.id || null; render(); window.scrollTo({ top: 0, behavior: 'smooth' }); },
+  delTir(d) { if (confirm('Supprimer définitivement ce score ?')) DB.remove('tirs/' + d.id); },
+  editEleve(d) { U.editId = d.id || null; render(); },
+  saveEleve(d) {
+    const nom = document.getElementById('edNom').value.trim(), prenom = document.getElementById('edPrenom').value.trim(), classe = document.getElementById('edClasse').value.trim().toUpperCase();
+    if (!nom || !prenom || !classe) return toast('Nom, prénom et classe sont obligatoires');
+    U.editId = null; document.activeElement.blur(); DB.update('eleves/' + d.id, { nom: nom.toUpperCase(), prenom, classe });
+  },
+  delEleve(d) { const e = S.eleves[d.id]; if (e && confirm(`Supprimer ${e.prenom} ${e.nom} de la liste ? (ses scores restent dans l’export)`)) DB.remove('eleves/' + d.id); },
+  delClasse(d) {
+    if (!confirm('Supprimer les ' + elevesOf(d.v).length + ' élèves de ' + d.v + ' ? (les scores restent dans l’export)')) return;
+    const upd = {}; elevesOf(d.v).forEach(e => { upd[e.id] = null; }); DB.update('eleves', upd);
+  },
+  addEleve() {
+    const p = document.getElementById('addPrenom'), n = document.getElementById('addNom'), c = document.getElementById('addClasse');
+    const prenom = p.value.trim(), nom = n.value.trim(), classe = c.value.trim().toUpperCase();
+    if (!prenom || !nom || !classe) return toast('Prénom, nom et classe sont obligatoires');
+    p.value = ''; n.value = ''; document.activeElement.blur();
+    DB.push('eleves', { prenom, nom: nom.toUpperCase(), classe }); toast(prenom + ' ajouté(e) en ' + classe);
+  },
+  async import() {
+    const f = document.getElementById('impFile').files[0];
+    let cl = document.getElementById('impClasse').value.trim().toUpperCase();
+    if (!f) return toast('Choisissez un fichier');
+    if (!cl) { const m = f.name.match(/\d+\s*[A-Z]+/i); cl = m ? m[0].replace(/\s/g, '').toUpperCase() : ''; }
+    if (!cl) return toast('Indiquez la classe');
+    try { const n = await importFile(f, cl); U.importClasse = ''; document.activeElement && document.activeElement.blur(); toast(n + ' élève(s) importé(s) en ' + cl); render(); }
+    catch (e) { toast('Import impossible : ' + e.message); }
+  },
+  csvTirs(d) {
+    const rows = [['Date', 'Heure', 'Classe', 'Nom', 'Prénom', 'iPad', 'Couloir', 'Série', 'Séries prévues', 'Touchées /5', 'Manqués', 'Tirs autorisés', 'Tours de pénalité', 'Admin']];
+    tirsList().filter(t => !d.v || t.classe === d.v).forEach(t => rows.push([frDate(t.date), hhmm(t.ts), t.classe, t.nom, t.prenom, t.poste, t.couloir, t.serie, t.nbSeries, t.touches, t.manques, t.tirsMax, 5 - t.touches, t.admin]));
+    download('biathlon-tirs' + (d.v ? '-' + d.v : '') + '-' + today() + '.csv', rows);
+  },
+  csvBilan(d) {
+    const all = tirsList(), rows = [['Classe', 'Nom', 'Prénom', 'Séances', 'Séries', 'Moyenne /5', '% cibles blanchies', 'Précision %', 'Manqués', 'Moy. 1re séance', 'Moy. dernière séance']];
+    (d.v ? [d.v] : classes()).forEach(cl => elevesOf(cl).forEach(e => {
+      const list = all.filter(t => t.eleveId === e.id), s = statsOf(list), days = [...new Set(list.map(t => t.date))].sort();
+      const first = days.length ? statsOf(list.filter(t => t.date === days[0])).avg : null, last = days.length ? statsOf(list.filter(t => t.date === days[days.length - 1])).avg : null;
+      rows.push([cl, e.nom, e.prenom, days.length, s.n, num(s.avg), s.pct ?? '', s.prec ?? '', s.m, num(first), num(last)]);
+    }));
+    download('biathlon-bilan' + (d.v ? '-' + d.v : '') + '-' + today() + '.csv', rows);
+  }
+};
+
+const COMMON = {
+  fullscreen() { const el = document.documentElement; (el.requestFullscreen || el.webkitRequestFullscreen || (() => {})).call(el); }
+};
+
+/* délégation des clics */
+$app.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]');
+  if (!el || !DB) return;
+  if (el.dataset.act === 'closePicker' && e.target.closest('[data-stop]') && el.classList.contains('overlay')) return;
+  if (el.disabled) return;
+  const fn = JUGE[el.dataset.act] || ADMIN[el.dataset.act] || COMMON[el.dataset.act];
+  if (fn) { fn(el.dataset); keepAwake(); }
+});
+document.addEventListener('change', e => { if (e.target.id === 'impClasse') U.importClasse = e.target.value; });
+
+start();
+</script>
+</body>
+</html>
