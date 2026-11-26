@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0f1720">
-<title>Biathlon laser – EPS YDM</title>
+<title>Biathlon score – EPS YDM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -95,7 +95,15 @@ input,select{font-family:inherit;font-size:15px}
 .btn-ghost{height:48px;padding:0 20px;border-radius:12px;border:2px solid #4a6280;background:transparent;color:var(--d-text);font-size:16px;font-weight:600}
 .pupils{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;overflow-y:auto}
 .pupils button{min-height:58px;padding:6px 10px;border:0;border-radius:12px;background:#2b3d55;color:var(--d-text);font-size:17px;font-weight:600;line-height:1.15}
+.pupils button{display:flex;align-items:center;gap:10px;text-align:left}
+.pupils .pn{flex:1;min-width:0}
 .pupils button small{display:block;font-size:12px;font-weight:500;color:var(--d-muted)}
+.pupils .cnt{flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:46px;height:42px;border-radius:10px;background:#0f1720;color:var(--d-text);line-height:1}
+.pupils .cnt b{font-family:var(--num);font-size:24px}
+.pupils .cnt i{font-style:normal;font-size:10px;color:var(--d-muted)}
+.pupils .cnt.zero{background:#f2c230;color:#1b1b1b}
+.pupils .cnt.zero i{color:#1b1b1b}
+.pick-legend{font-size:14px;color:var(--d-muted);margin:-6px 0 0}
 .pupils button:disabled{background:#141d29;color:#55677d}
 
 /* ---------- PROJECTION ---------- */
@@ -374,7 +382,7 @@ document.addEventListener('focusout', () => setTimeout(() => { if (renderPending
    --------------------------------------------------------------------- */
 function viewHome() {
   return `<div class="home">
-    <h1>BIATHLON LASER · EPS</h1>
+    <h1>BIATHLON SCORE · EPS</h1>
     <p>Choisissez l’écran de cet appareil</p>
     <div class="home-grid">
       <a href="#juge-A"><b>iPad A</b><span>Juge du pas de tir A · 5 couloirs</span></a>
@@ -435,11 +443,17 @@ function laneRow(l, i, c) {
 function pickerView(c) {
   const used = {};
   POSTES.forEach(p => lanesOf(p).forEach(l => { if (l.eleveId) used[l.eleveId] = true; }));
-  const list = elevesOf(c.classe).sort((a, b) => (a.prenom || '').localeCompare(b.prenom || '', 'fr'));
-  const items = list.length ? list.map(e => `<button data-act="choose" data-id="${e.id}" ${used[e.id] ? 'disabled' : ''}>${esc(e.prenom)}<small>${esc(e.nom)}</small></button>`).join('')
+  /* séries déjà faites : aujourd'hui (gros chiffre) et sur tout le cycle */
+  const day = {}, cycle = {}, d0 = today();
+  Object.values(S.tirs || {}).forEach(t => { cycle[t.eleveId] = (cycle[t.eleveId] || 0) + 1; if (t.date === d0) day[t.eleveId] = (day[t.eleveId] || 0) + 1; });
+  const list = elevesOf(c.classe).sort((a, b) => (day[a.id] || 0) - (day[b.id] || 0) || (a.prenom || '').localeCompare(b.prenom || '', 'fr'));
+  const items = list.length ? list.map(e => { const n = day[e.id] || 0;
+    return `<button data-act="choose" data-id="${e.id}" ${used[e.id] ? 'disabled' : ''}><span class="pn">${esc(e.prenom)}<small>${esc(e.nom)}${used[e.id] ? ' · en train de tirer' : ' · cycle : ' + (cycle[e.id] || 0)}</small></span>
+      <span class="cnt ${n ? '' : 'zero'}"><b>${n}</b><i>auj.</i></span></button>`; }).join('')
     : `<p class="empty-msg" style="color:#9fb0c4">Aucun élève : le PC admin doit choisir la classe de la séance.</p>`;
   return `<div class="overlay" data-act="closePicker"><div class="sheet" data-stop="1">
     <div class="sheet-h"><div>Qui tire au couloir ${U.picker + 1} ? <span>· ${esc(c.classe || '')}</span></div><button class="btn-ghost" data-act="closePicker">Annuler</button></div>
+    <p class="pick-legend">Chiffre = séries déjà faites aujourd’hui (en jaune : pas encore tiré). Les élèves qui ont le moins tiré sont en premier.</p>
     <div class="pupils">${items}</div></div></div>`;
 }
 
@@ -515,7 +529,7 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
    --------------------------------------------------------------------- */
 function viewProjection() {
   const c = cfg(), now = new Date();
-  let h = `<div class="proj"><div class="p-top"><h1>BIATHLON LASER · ${esc(c.classe || '')}</h1>
+  let h = `<div class="proj"><div class="p-top"><h1>BIATHLON SCORE · ${esc(c.classe || '')}</h1>
     <div class="meta"><span>${c.nbSeries} série${c.nbSeries > 1 ? 's' : ''} · ${c.tirsMax} tirs pour 5 cibles</span><span>${now.getHours()}h${pad(now.getMinutes())}</span>
     <button data-act="fullscreen">Plein écran</button></div></div><div class="p-cols">`;
   POSTES.forEach(p => {
@@ -550,7 +564,7 @@ function viewAdmin() {
   const c = cfg();
   const tabs = [['seance', 'Séance'], ['histo', 'Historique'], ['eleves', 'Élèves'], ['export', 'Export']]
     .map(([k, t]) => `<button class="tab ${U.tab === k ? 'on' : ''}" data-act="tab" data-k="${k}">${t}</button>`).join('');
-  let h = `<div class="admin"><div class="a-top"><h1>Biathlon laser · Admin</h1>
+  let h = `<div class="admin"><div class="a-top"><h1>Biathlon score · Admin</h1>
     <div class="who">Qui gère la séance ?<div class="chips">${ADMINS.map(a => `<button class="chip ${c.admin === a ? 'on' : ''}" data-act="setAdmin" data-v="${a}">${a}</button>`).join('')}</div></div>
     <div class="who"><span class="dot ${S.connected ? '' : 'off'}"></span>${DB && DB.demo ? 'Mode démo' : (S.connected ? 'En ligne' : 'Hors ligne')}</div>
     <a class="btn" href="#projection" target="_blank" rel="noopener">Ouvrir la projection</a>

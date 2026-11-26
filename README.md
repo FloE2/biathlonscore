@@ -1,4 +1,4 @@
-# Biathlon laser – EPS YDM
+# Biathlon score – EPS YDM
 
 Appli de cours pour le cycle biathlon (tir carabine laser) : 2 iPad juges (5 couloirs chacun), un PC admin qui règle la séance et garde l'historique du cycle, et un écran de projection en direct.
 
@@ -16,7 +16,7 @@ Astuce iPad : ouvrir l'adresse dans Safari puis Partager → « Sur l'écran d'a
 
 ## Fonctionnement d'une série (iPad)
 
-1. **+ Qui tire ?** → toucher le prénom de l'élève (les élèves déjà placés sont grisés). Toucher le nom pour changer de tireur, ✕ pour le retirer.
+1. **+ Qui tire ?** → toucher le prénom de l'élève. Chaque élève affiche le nombre de séries déjà faites aujourd'hui (en jaune s'il n'a pas encore tiré) ; ceux qui ont le moins tiré sont en premier, ceux déjà placés sont grisés. Toucher le nom pour changer de tireur, ✕ pour le retirer.
 2. **Cible touchée** → toucher la cible (disque blanc ✓). Re-toucher annule.
 3. **Tir manqué** → bouton « + Manqué » (le « − » corrige).
 4. Le couloir se termine **tout seul** quand les 5 cibles sont blanchies ou que le nombre de tirs autorisés est atteint. Le bouton **Tir terminé** permet aussi d'arrêter un couloir avant.
