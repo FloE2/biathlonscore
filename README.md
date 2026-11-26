@@ -41,6 +41,10 @@ Tant que `FIREBASE_CONFIG` vaut `null` dans `index.html`, l'appli tourne en **mo
 2. Onglet **Séance** : choisir son prénom, la classe, le nombre de séries et le nombre de tirs autorisés (5 par défaut).
 3. Ouvrir `#juge-A` et `#juge-B` sur les iPad, `#projection` sur le vidéoprojecteur.
 
+## Fin de séance
+
+Onglet **Séance** du PC → **Terminer la séance** : libère les 2 iPad. Les scores sont enregistrés au fil de l'eau ; chaque séance est rangée par date dans l'historique du cycle (fiche élève, exports). La carte montre aussi les élèves qui n'ont pas encore tiré.
+
 ## Données
 
 Firebase Realtime Database (Europe) :

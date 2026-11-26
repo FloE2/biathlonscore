@@ -586,7 +586,7 @@ function adminSeance(c) {
     <div class="card hl"><h3>Tirs autorisés pour blanchir les 5 cibles</h3><div class="stepper">
       <button data-act="step" data-k="tirsMax" data-d="-1" aria-label="Un tir de moins">−</button><b>${c.tirsMax}</b>
       <button data-act="step" data-k="tirsMax" data-d="1" aria-label="Un tir de plus">+</button><span>tirs (5 = pas de balle de réserve)</span></div></div>
-  </div><div class="two"><div class="postes">`;
+  </div>${finSeance(c)}<div class="two"><div class="postes">`;
   POSTES.forEach(p => {
     const lanes = lanesOf(p);
     h += `<div class="card"><div class="cls-h"><h3>iPad ${p} · pas de tir ${p}</h3><button class="btn sm danger" data-act="clearPoste" data-p="${p}">Vider le poste</button></div><div class="mini">`;
@@ -604,6 +604,19 @@ function adminSeance(c) {
     <div><b>${esc(nameOf(t.eleveId, t.prenom + ' ' + t.nom))} <span>(${esc(t.classe)})</span></b><span>Série ${t.serie}/${t.nbSeries} · ${t.manques} manqué${t.manques > 1 ? 's' : ''} · iPad ${t.poste} · ${hhmm(t.ts)}</span></div></div>`).join('')
     : `<p class="empty-msg">Rien aujourd’hui pour l’instant.</p>`}</div></div></div>`;
   return h;
+}
+
+function finSeance(c) {
+  if (!c.classe) return '';
+  const d0 = today(), done = {};
+  tirsList().filter(t => t.date === d0 && t.classe === c.classe).forEach(t => { done[t.eleveId] = (done[t.eleveId] || 0) + 1; });
+  const els = elevesOf(c.classe), nSeries = Object.values(done).reduce((a, n) => a + n, 0);
+  const absents = els.filter(e => !done[e.id]);
+  return `<div class="card"><div class="cls-h"><h3>Séance du ${frDate(d0)} · ${esc(c.classe)}</h3>
+    <button class="btn primary" data-act="endSeance">Terminer la séance</button></div>
+    <p class="note" style="font-size:14px;color:var(--ink)"><b>${nSeries}</b> série(s) enregistrée(s) · <b>${els.length - absents.length}</b> / ${els.length} élèves ont tiré.</p>
+    ${absents.length && absents.length < els.length ? `<p class="note">Pas encore tiré : ${absents.map(e => esc(nameOf(e.id))).join(', ')}</p>` : ''}
+    <p class="note">Les scores sont enregistrés dans l’historique au fur et à mesure. « Terminer la séance » libère les 2 iPad ; la prochaine séance repartira de zéro sur les iPad et s’ajoutera à l’historique du cycle.</p></div>`;
 }
 
 function adminHisto(c) {
@@ -734,6 +747,12 @@ const ADMIN = {
   step(d) {
     const c = cfg(), lim = d.k === 'nbSeries' ? [1, 10] : [5, 10];
     DB.update('config', { [d.k]: Math.min(lim[1], Math.max(lim[0], c[d.k] + (+d.d))) });
+  },
+  endSeance() {
+    const open = POSTES.reduce((n, p) => n + lanesOf(p).filter(l => l.eleveId && !l.done && (hitsCount(l) + l.manques) > 0).length, 0);
+    const msg = open ? open + ' tireur(s) ont une série commencée mais pas terminée : elle ne sera pas enregistrée.\n\nTerminer quand même la séance ?' : 'Terminer la séance ? Les 2 iPad seront libérés. Tous les scores restent dans l’historique.';
+    if (!confirm(msg)) return;
+    DB.remove('postes'); toast('Séance terminée : scores archivés dans l’historique du cycle');
   },
   clearPoste(d) { if (confirm('Retirer tous les tireurs de l’iPad ' + d.p + ' ? (les scores déjà envoyés sont conservés)')) DB.remove('postes/' + d.p); },
   histClasse(d) { U.histClasse = d.v; U.fiche = null; render(); },
