@@ -6,11 +6,11 @@ Appli de cours pour le cycle biathlon (tir carabine laser) : 2 iPad juges (5 cou
 
 | Écran | Adresse | Rôle |
 |---|---|---|
-| Accueil | `…/Biathlonscore/` | choisir l'écran de l'appareil |
-| iPad A | `…/Biathlonscore/#juge-A` | l'élève juge note les tirs des couloirs 1 à 5 du pas de tir A |
-| iPad B | `…/Biathlonscore/#juge-B` | idem pour le pas de tir B |
-| PC admin | `…/Biathlonscore/#admin` | prénom de l'admin, classe, nombre de séries, tirs autorisés, historique, élèves, export |
-| Projection | `…/Biathlonscore/#projection` | les 10 couloirs en direct sur grand écran |
+| Accueil | `…/biathlonscore/` | choisir l'écran de l'appareil |
+| iPad A | `…/biathlonscore/#juge-A` | l'élève juge note les tirs des couloirs 1 à 5 du pas de tir A |
+| iPad B | `…/biathlonscore/#juge-B` | idem pour le pas de tir B |
+| PC admin | `…/biathlonscore/#admin` | prénom de l'admin, classe, nombre de séries, tirs autorisés, historique, élèves, export |
+| Projection | `…/biathlonscore/#projection` | les 10 couloirs en direct sur grand écran |
 
 Astuce iPad : ouvrir l'adresse dans Safari puis Partager → « Sur l'écran d'accueil » pour l'avoir en plein écran.
 
