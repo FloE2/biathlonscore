@@ -624,6 +624,12 @@ function adminHisto(c) {
   const all = tirsList();
   let h = `<div class="cls-h"><div class="chips">${cls.map(k => `<button class="chip ${cl === k ? 'on' : ''}" data-act="histClasse" data-v="${esc(k)}">${esc(k)}</button>`).join('')}</div>
     <span class="empty-msg">Cliquez sur un élève pour voir sa progression</span></div>`;
+  const seances = {};
+  all.filter(t => t.classe === cl).forEach(t => { const s = seances[t.date] = seances[t.date] || { n: 0, el: {}, admins: {} }; s.n++; s.el[t.eleveId] = 1; if (t.admin) s.admins[t.admin] = 1; });
+  const dates = Object.keys(seances).sort().reverse();
+  if (dates.length) h += `<div class="card"><h3>Séances de la ${esc(cl)}</h3><div class="table-box"><table><thead><tr><th>Date</th><th>Séries</th><th>Élèves</th><th>Admin</th><th></th></tr></thead><tbody>
+    ${dates.map(d => `<tr><td><b>${frDate(d)}</b></td><td>${seances[d].n}</td><td>${Object.keys(seances[d].el).length}</td><td>${esc(Object.keys(seances[d].admins).join(', '))}</td>
+      <td style="text-align:right"><button class="btn sm danger" data-act="delSeance" data-v="${esc(cl)}" data-d="${d}">Supprimer cette séance</button></td></tr>`).join('')}</tbody></table></div></div>`;
   if (U.fiche && S.eleves[U.fiche]) h += ficheView(U.fiche, all);
   const rows = elevesOf(cl).map(e => {
     const list = all.filter(t => t.eleveId === e.id), s = statsOf(list);
@@ -757,6 +763,11 @@ const ADMIN = {
   clearPoste(d) { if (confirm('Retirer tous les tireurs de l’iPad ' + d.p + ' ? (les scores déjà envoyés sont conservés)')) DB.remove('postes/' + d.p); },
   histClasse(d) { U.histClasse = d.v; U.fiche = null; render(); },
   fiche(d) { U.fiche = d.id || null; render(); window.scrollTo({ top: 0, behavior: 'smooth' }); },
+  delSeance(d) {
+    const ids = tirsList().filter(t => t.classe === d.v && t.date === d.d).map(t => t.id);
+    if (!ids.length || !confirm(`Supprimer définitivement la séance du ${frDate(d.d)} en ${d.v} (${ids.length} série(s)) ?\n\nCette action ne peut pas être annulée.`)) return;
+    const upd = {}; ids.forEach(id => { upd[id] = null; }); DB.update('tirs', upd); U.fiche = null; toast('Séance du ' + frDate(d.d) + ' supprimée');
+  },
   delTir(d) { if (confirm('Supprimer définitivement ce score ?')) DB.remove('tirs/' + d.id); },
   editEleve(d) { U.editId = d.id || null; render(); },
   saveEleve(d) {
